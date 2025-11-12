@@ -1,5 +1,6 @@
--- Enable pgvector extension for embeddings
-CREATE EXTENSION IF NOT EXISTS vector;
+-- Enable pgvector extension for embeddings in extensions schema
+CREATE SCHEMA IF NOT EXISTS extensions;
+CREATE EXTENSION IF NOT EXISTS vector SCHEMA extensions;
 
 -- Profiles table (1:1 with auth.users)
 CREATE TABLE IF NOT EXISTS profiles (
