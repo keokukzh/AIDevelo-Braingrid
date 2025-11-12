@@ -9,10 +9,8 @@ export async function saveProgress(
   completed: boolean
 ): Promise<ActionResult<Progress>> {
   try {
-    const userId = await getUserId();
-    if (!userId) {
-      return { success: false, error: 'Not authenticated' };
-    }
+    // Use a default user ID for public access mode
+    const userId = await getUserId() || '00000000-0000-0000-0000-000000000000';
 
     if (!topicId) {
       return { success: false, error: 'Topic ID is required' };
@@ -47,10 +45,8 @@ export async function saveProgress(
 
 export async function fetchProgress(): Promise<ActionResult<Progress[]>> {
   try {
-    const userId = await getUserId();
-    if (!userId) {
-      return { success: false, error: 'Not authenticated' };
-    }
+    // Use a default user ID for public access mode
+    const userId = await getUserId() || '00000000-0000-0000-0000-000000000000';
 
     const supabase = await createClient();
     const { data, error } = await supabase
@@ -73,10 +69,8 @@ export async function fetchProgressByTopic(
   topicId: string
 ): Promise<ActionResult<Progress | null>> {
   try {
-    const userId = await getUserId();
-    if (!userId) {
-      return { success: false, error: 'Not authenticated' };
-    }
+    // Use a default user ID for public access mode
+    const userId = await getUserId() || '00000000-0000-0000-0000-000000000000';
 
     const supabase = await createClient();
     const { data, error } = await supabase
@@ -104,10 +98,8 @@ export async function deleteProgress(
   topicId: string
 ): Promise<ActionResult<void>> {
   try {
-    const userId = await getUserId();
-    if (!userId) {
-      return { success: false, error: 'Not authenticated' };
-    }
+    // Use a default user ID for public access mode
+    const userId = await getUserId() || '00000000-0000-0000-0000-000000000000';
 
     const supabase = await createClient();
     const { error } = await supabase

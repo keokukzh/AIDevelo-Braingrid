@@ -1,4 +1,3 @@
-import { requireAuth } from '@/lib/auth/session';
 import { fetchProgress } from '@/lib/actions/progress';
 import Sidebar from '@/components/Sidebar';
 import TopicCard from '@/components/TopicCard';
@@ -10,8 +9,7 @@ import { topics } from '@/lib/constants/topics';
 import DashboardClient from '@/components/DashboardClient';
 
 export default async function DashboardPage() {
-  await requireAuth();
-  
+  // No authentication required - fetch progress if available
   const progressResult = await fetchProgress();
   const progress = progressResult.success ? progressResult.data || [] : [];
   

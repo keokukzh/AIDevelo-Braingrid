@@ -1,22 +1,14 @@
-import { requireAuth } from '@/lib/auth/session';
 import { getProfile, getProgressStats } from '@/lib/actions/profile';
 import ProfileForm from '@/components/ProfileForm';
 import ProgressStats from '@/components/ProgressStats';
-import { createClient } from '@/lib/supabaseServer';
 
 export default async function AccountPage() {
-  const user = await requireAuth();
+  // No authentication required - fetch data if available
   const profileResult = await getProfile();
   const statsResult = await getProgressStats();
 
   const profile = profileResult.success ? profileResult.data : null;
   const stats = statsResult.success ? statsResult.data : null;
-
-  // Get user email
-  const supabase = await createClient();
-  const {
-    data: { user: authUser },
-  } = await supabase.auth.getUser();
 
   return (
     <div className="min-h-screen p-6">
@@ -26,7 +18,7 @@ export default async function AccountPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <ProfileForm
             initialProfile={profile || null}
-            userEmail={authUser?.email || ''}
+            userEmail={profile?.username || 'Guest User'}
           />
           {stats && (
             <ProgressStats
@@ -42,19 +34,17 @@ export default async function AccountPage() {
           <h3 className="text-xl font-bold mb-4">Account Information</h3>
           <div className="space-y-2 text-sm">
             <div>
-              <span className="text-text-secondary">Account created:</span>{' '}
-              <span className="text-text-primary">
-                {authUser?.created_at
-                  ? new Date(authUser.created_at).toLocaleDateString()
-                  : 'Unknown'}
-              </span>
+              <span className="text-text-secondary">Mode:</span>{' '}
+              <span className="text-text-primary">Public Access (No Login Required)</span>
             </div>
-            <div>
-              <span className="text-text-secondary">User ID:</span>{' '}
-              <span className="text-text-primary font-mono text-xs">
-                {user.id}
-              </span>
-            </div>
+            {profile?.created_at && (
+              <div>
+                <span className="text-text-secondary">Profile created:</span>{' '}
+                <span className="text-text-primary">
+                  {new Date(profile.created_at).toLocaleDateString()}
+                </span>
+              </div>
+            )}
           </div>
         </div>
       </div>

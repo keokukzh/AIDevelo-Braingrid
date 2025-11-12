@@ -15,14 +15,7 @@ export default function LivePage() {
   const [connected, setConnected] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    // Check authentication
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) {
-        router.push('/login');
-      }
-    });
-  }, [router]);
+  // No authentication required - page is public
 
   useEffect(() => {
     const client = new WebSocketClient();

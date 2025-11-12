@@ -6,10 +6,8 @@ import type { Profile } from '@/lib/db/types';
 
 export async function getProfile(): Promise<ActionResult<Profile>> {
   try {
-    const userId = await getUserId();
-    if (!userId) {
-      return { success: false, error: 'Not authenticated' };
-    }
+    // Use a default user ID for public access mode
+    const userId = await getUserId() || '00000000-0000-0000-0000-000000000000';
 
     const supabase = await createClient();
     const { data, error } = await supabase
@@ -32,10 +30,8 @@ export async function updateProfile(
   username: string
 ): Promise<ActionResult<Profile>> {
   try {
-    const userId = await getUserId();
-    if (!userId) {
-      return { success: false, error: 'Not authenticated' };
-    }
+    // Use a default user ID for public access mode
+    const userId = await getUserId() || '00000000-0000-0000-0000-000000000000';
 
     if (!username || username.trim().length < 3 || username.trim().length > 20) {
       return {
@@ -83,10 +79,8 @@ export async function getProgressStats(): Promise<
   }>
 > {
   try {
-    const userId = await getUserId();
-    if (!userId) {
-      return { success: false, error: 'Not authenticated' };
-    }
+    // Use a default user ID for public access mode
+    const userId = await getUserId() || '00000000-0000-0000-0000-000000000000';
 
     const supabase = await createClient();
     const { data: progress, error } = await supabase

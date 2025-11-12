@@ -9,10 +9,8 @@ export async function saveEvent(
   payload: Record<string, unknown>
 ): Promise<ActionResult<Event>> {
   try {
-    const userId = await getUserId();
-    if (!userId) {
-      return { success: false, error: 'Not authenticated' };
-    }
+    // Use a default user ID for public access mode
+    const userId = await getUserId() || '00000000-0000-0000-0000-000000000000';
 
     if (!type || !payload) {
       return { success: false, error: 'Type and payload are required' };
@@ -44,10 +42,8 @@ export async function fetchEvents(
   limit: number = 50
 ): Promise<ActionResult<Event[]>> {
   try {
-    const userId = await getUserId();
-    if (!userId) {
-      return { success: false, error: 'Not authenticated' };
-    }
+    // Use a default user ID for public access mode
+    const userId = await getUserId() || '00000000-0000-0000-0000-000000000000';
 
     const supabase = await createClient();
     let query = supabase
@@ -75,10 +71,8 @@ export async function fetchEvents(
 
 export async function deleteEvent(id: number): Promise<ActionResult<void>> {
   try {
-    const userId = await getUserId();
-    if (!userId) {
-      return { success: false, error: 'Not authenticated' };
-    }
+    // Use a default user ID for public access mode
+    const userId = await getUserId() || '00000000-0000-0000-0000-000000000000';
 
     const supabase = await createClient();
     const { error } = await supabase

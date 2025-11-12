@@ -41,6 +41,12 @@ export default function AuthButton() {
     );
   }
 
+  // Optional: Show login status if user is logged in, otherwise show nothing
+  // Since we're in public mode, we'll hide the auth button
+  return null;
+  
+  // Uncomment below if you want to show login option (optional)
+  /*
   if (user) {
     return (
       <div className="flex items-center gap-4">
@@ -65,5 +71,6 @@ export default function AuthButton() {
       Login
     </button>
   );
+  */
 }
 

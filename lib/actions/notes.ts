@@ -9,10 +9,8 @@ export async function saveNote(
   content: string
 ): Promise<ActionResult<Note>> {
   try {
-    const userId = await getUserId();
-    if (!userId) {
-      return { success: false, error: 'Not authenticated' };
-    }
+    // Use a default user ID for public access mode
+    const userId = await getUserId() || '00000000-0000-0000-0000-000000000000';
 
     if (!content || content.trim().length === 0) {
       return { success: false, error: 'Content is required' };
@@ -43,10 +41,8 @@ export async function fetchNotes(
   kind?: 'daily_win' | 'general'
 ): Promise<ActionResult<Note[]>> {
   try {
-    const userId = await getUserId();
-    if (!userId) {
-      return { success: false, error: 'Not authenticated' };
-    }
+    // Use a default user ID for public access mode
+    const userId = await getUserId() || '00000000-0000-0000-0000-000000000000';
 
     const supabase = await createClient();
     let query = supabase
@@ -76,10 +72,8 @@ export async function updateNote(
   content: string
 ): Promise<ActionResult<Note>> {
   try {
-    const userId = await getUserId();
-    if (!userId) {
-      return { success: false, error: 'Not authenticated' };
-    }
+    // Use a default user ID for public access mode
+    const userId = await getUserId() || '00000000-0000-0000-0000-000000000000';
 
     if (!content || content.trim().length === 0) {
       return { success: false, error: 'Content is required' };
@@ -106,10 +100,8 @@ export async function updateNote(
 
 export async function deleteNote(id: number): Promise<ActionResult<void>> {
   try {
-    const userId = await getUserId();
-    if (!userId) {
-      return { success: false, error: 'Not authenticated' };
-    }
+    // Use a default user ID for public access mode
+    const userId = await getUserId() || '00000000-0000-0000-0000-000000000000';
 
     const supabase = await createClient();
     const { error } = await supabase

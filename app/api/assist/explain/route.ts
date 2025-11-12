@@ -6,18 +6,7 @@ import { openai, CHAT_MODEL } from '@/lib/openai';
 
 export async function POST(request: NextRequest) {
   try {
-    // Verify authentication
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      return NextResponse.json(
-        { success: false, error: 'Unauthorized. Please log in.' },
-        { status: 401 }
-      );
-    }
+    // No authentication required - public access
 
     // Parse request body
     const body = await request.json();
