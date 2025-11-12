@@ -34,11 +34,11 @@ export default function DisciplineTracker({
           )}
           {streak > 0 && streak < 7 && (
             <p className="text-sm text-text-secondary">
-              Keep it up! You're building momentum.
+              Keep it up! You&apos;re building momentum.
             </p>
           )}
           {streak >= 7 && (
-            <p className="text-sm text-success">Amazing! You're on fire! 🔥</p>
+            <p className="text-sm text-success">Amazing! You&apos;re on fire! 🔥</p>
           )}
         </div>
         {accountCreatedAt && (

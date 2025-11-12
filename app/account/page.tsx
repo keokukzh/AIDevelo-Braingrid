@@ -25,7 +25,7 @@ export default async function AccountPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <ProfileForm
-            initialProfile={profile}
+            initialProfile={profile || null}
             userEmail={authUser?.email || ''}
           />
           {stats && (
