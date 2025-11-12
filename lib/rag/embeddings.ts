@@ -8,7 +8,6 @@ export async function generateEmbedding(text: string): Promise<number[]> {
     openai.embeddings.create({
       model: EMBEDDINGS_MODEL,
       input: text,
-      timeout: 30000, // 30 seconds timeout
     }),
     new Promise<never>((_, reject) =>
       setTimeout(() => reject(new Error('Embedding generation timeout')), 30000)
