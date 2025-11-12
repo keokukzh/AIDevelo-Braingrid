@@ -1,7 +1,6 @@
 'use server';
 
-import { createClient } from '@/lib/supabaseServer';
-import { getUserId, handleDbError, type ActionResult } from '@/lib/db/queries';
+import { getUserId, handleDbError, getDbClient, type ActionResult } from '@/lib/db/queries';
 import type { Progress } from '@/lib/db/types';
 
 export async function saveProgress(
@@ -9,14 +8,15 @@ export async function saveProgress(
   completed: boolean
 ): Promise<ActionResult<Progress>> {
   try {
-    // Use a default user ID for public access mode
+    // Use guest user ID for public access mode
     const userId = await getUserId() || '00000000-0000-0000-0000-000000000000';
 
     if (!topicId) {
       return { success: false, error: 'Topic ID is required' };
     }
 
-    const supabase = await createClient();
+    // Use service role client to bypass RLS in public mode
+    const supabase = await getDbClient();
     const { data, error } = await supabase
       .from('progress')
       .upsert(
@@ -45,10 +45,11 @@ export async function saveProgress(
 
 export async function fetchProgress(): Promise<ActionResult<Progress[]>> {
   try {
-    // Use a default user ID for public access mode
+    // Use guest user ID for public access mode
     const userId = await getUserId() || '00000000-0000-0000-0000-000000000000';
 
-    const supabase = await createClient();
+    // Use service role client to bypass RLS in public mode
+    const supabase = await getDbClient();
     const { data, error } = await supabase
       .from('progress')
       .select('*')
@@ -69,10 +70,11 @@ export async function fetchProgressByTopic(
   topicId: string
 ): Promise<ActionResult<Progress | null>> {
   try {
-    // Use a default user ID for public access mode
+    // Use guest user ID for public access mode
     const userId = await getUserId() || '00000000-0000-0000-0000-000000000000';
 
-    const supabase = await createClient();
+    // Use service role client to bypass RLS in public mode
+    const supabase = await getDbClient();
     const { data, error } = await supabase
       .from('progress')
       .select('*')
@@ -98,10 +100,11 @@ export async function deleteProgress(
   topicId: string
 ): Promise<ActionResult<void>> {
   try {
-    // Use a default user ID for public access mode
+    // Use guest user ID for public access mode
     const userId = await getUserId() || '00000000-0000-0000-0000-000000000000';
 
-    const supabase = await createClient();
+    // Use service role client to bypass RLS in public mode
+    const supabase = await getDbClient();
     const { error } = await supabase
       .from('progress')
       .delete()

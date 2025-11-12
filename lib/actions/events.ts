@@ -1,7 +1,6 @@
 'use server';
 
-import { createClient } from '@/lib/supabaseServer';
-import { getUserId, handleDbError, type ActionResult } from '@/lib/db/queries';
+import { getUserId, handleDbError, getDbClient, type ActionResult } from '@/lib/db/queries';
 import type { Event } from '@/lib/db/types';
 
 export async function saveEvent(
@@ -9,14 +8,15 @@ export async function saveEvent(
   payload: Record<string, unknown>
 ): Promise<ActionResult<Event>> {
   try {
-    // Use a default user ID for public access mode
+    // Use guest user ID for public access mode
     const userId = await getUserId() || '00000000-0000-0000-0000-000000000000';
 
     if (!type || !payload) {
       return { success: false, error: 'Type and payload are required' };
     }
 
-    const supabase = await createClient();
+    // Use service role client to bypass RLS in public mode
+    const supabase = await getDbClient();
     const { data, error } = await supabase
       .from('events')
       .insert({
@@ -42,10 +42,11 @@ export async function fetchEvents(
   limit: number = 50
 ): Promise<ActionResult<Event[]>> {
   try {
-    // Use a default user ID for public access mode
+    // Use guest user ID for public access mode
     const userId = await getUserId() || '00000000-0000-0000-0000-000000000000';
 
-    const supabase = await createClient();
+    // Use service role client to bypass RLS in public mode
+    const supabase = await getDbClient();
     let query = supabase
       .from('events')
       .select('*')
@@ -71,10 +72,11 @@ export async function fetchEvents(
 
 export async function deleteEvent(id: number): Promise<ActionResult<void>> {
   try {
-    // Use a default user ID for public access mode
+    // Use guest user ID for public access mode
     const userId = await getUserId() || '00000000-0000-0000-0000-000000000000';
 
-    const supabase = await createClient();
+    // Use service role client to bypass RLS in public mode
+    const supabase = await getDbClient();
     const { error } = await supabase
       .from('events')
       .delete()

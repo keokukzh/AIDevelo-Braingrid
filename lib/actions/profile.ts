@@ -1,15 +1,15 @@
 'use server';
 
-import { createClient } from '@/lib/supabaseServer';
-import { getUserId, handleDbError, type ActionResult } from '@/lib/db/queries';
+import { getUserId, handleDbError, getDbClient, type ActionResult } from '@/lib/db/queries';
 import type { Profile } from '@/lib/db/types';
 
 export async function getProfile(): Promise<ActionResult<Profile>> {
   try {
-    // Use a default user ID for public access mode
+    // Use guest user ID for public access mode
     const userId = await getUserId() || '00000000-0000-0000-0000-000000000000';
 
-    const supabase = await createClient();
+    // Use service role client to bypass RLS in public mode
+    const supabase = await getDbClient();
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
@@ -30,7 +30,7 @@ export async function updateProfile(
   username: string
 ): Promise<ActionResult<Profile>> {
   try {
-    // Use a default user ID for public access mode
+    // Use guest user ID for public access mode
     const userId = await getUserId() || '00000000-0000-0000-0000-000000000000';
 
     if (!username || username.trim().length < 3 || username.trim().length > 20) {
@@ -40,8 +40,10 @@ export async function updateProfile(
       };
     }
 
-    // Check if username is already taken
-    const supabase = await createClient();
+    // Use service role client to bypass RLS in public mode
+    const supabase = await getDbClient();
+    
+    // Check if username is already taken (excluding current user)
     const { data: existing } = await supabase
       .from('profiles')
       .select('id')
@@ -79,10 +81,11 @@ export async function getProgressStats(): Promise<
   }>
 > {
   try {
-    // Use a default user ID for public access mode
+    // Use guest user ID for public access mode
     const userId = await getUserId() || '00000000-0000-0000-0000-000000000000';
 
-    const supabase = await createClient();
+    // Use service role client to bypass RLS in public mode
+    const supabase = await getDbClient();
     const { data: progress, error } = await supabase
       .from('progress')
       .select('*')

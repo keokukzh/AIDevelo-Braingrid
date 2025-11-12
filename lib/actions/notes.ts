@@ -1,7 +1,6 @@
 'use server';
 
-import { createClient } from '@/lib/supabaseServer';
-import { getUserId, handleDbError, type ActionResult } from '@/lib/db/queries';
+import { getUserId, handleDbError, getDbClient, type ActionResult } from '@/lib/db/queries';
 import type { Note } from '@/lib/db/types';
 
 export async function saveNote(
@@ -9,14 +8,15 @@ export async function saveNote(
   content: string
 ): Promise<ActionResult<Note>> {
   try {
-    // Use a default user ID for public access mode
+    // Use guest user ID for public access mode
     const userId = await getUserId() || '00000000-0000-0000-0000-000000000000';
 
     if (!content || content.trim().length === 0) {
       return { success: false, error: 'Content is required' };
     }
 
-    const supabase = await createClient();
+    // Use service role client to bypass RLS in public mode
+    const supabase = await getDbClient();
     const { data, error } = await supabase
       .from('notes')
       .insert({
@@ -41,10 +41,11 @@ export async function fetchNotes(
   kind?: 'daily_win' | 'general'
 ): Promise<ActionResult<Note[]>> {
   try {
-    // Use a default user ID for public access mode
+    // Use guest user ID for public access mode
     const userId = await getUserId() || '00000000-0000-0000-0000-000000000000';
 
-    const supabase = await createClient();
+    // Use service role client to bypass RLS in public mode
+    const supabase = await getDbClient();
     let query = supabase
       .from('notes')
       .select('*')
@@ -72,14 +73,15 @@ export async function updateNote(
   content: string
 ): Promise<ActionResult<Note>> {
   try {
-    // Use a default user ID for public access mode
+    // Use guest user ID for public access mode
     const userId = await getUserId() || '00000000-0000-0000-0000-000000000000';
 
     if (!content || content.trim().length === 0) {
       return { success: false, error: 'Content is required' };
     }
 
-    const supabase = await createClient();
+    // Use service role client to bypass RLS in public mode
+    const supabase = await getDbClient();
     const { data, error } = await supabase
       .from('notes')
       .update({ content: content.trim() })
@@ -100,10 +102,11 @@ export async function updateNote(
 
 export async function deleteNote(id: number): Promise<ActionResult<void>> {
   try {
-    // Use a default user ID for public access mode
+    // Use guest user ID for public access mode
     const userId = await getUserId() || '00000000-0000-0000-0000-000000000000';
 
-    const supabase = await createClient();
+    // Use service role client to bypass RLS in public mode
+    const supabase = await getDbClient();
     const { error } = await supabase
       .from('notes')
       .delete()
