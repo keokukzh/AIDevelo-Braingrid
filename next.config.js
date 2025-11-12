@@ -7,6 +7,14 @@ const nextConfig = {
       bodySizeLimit: '2mb',
     },
   },
+  // Increase API route timeout (default is 10s)
+  // This is important for RAG operations that call OpenAI
+  api: {
+    responseLimit: false,
+    bodyParser: {
+      sizeLimit: '2mb',
+    },
+  },
 }
 
 module.exports = nextConfig

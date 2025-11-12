@@ -4,10 +4,16 @@ import { openai, EMBEDDINGS_MODEL } from '@/lib/openai';
  * Generate embedding for a single text
  */
 export async function generateEmbedding(text: string): Promise<number[]> {
-  const response = await openai.embeddings.create({
-    model: EMBEDDINGS_MODEL,
-    input: text,
-  });
+  const response = await Promise.race([
+    openai.embeddings.create({
+      model: EMBEDDINGS_MODEL,
+      input: text,
+      timeout: 30000, // 30 seconds timeout
+    }),
+    new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error('Embedding generation timeout')), 30000)
+    ),
+  ]);
 
   return response.data[0].embedding;
 }
@@ -30,10 +36,18 @@ export async function generateEmbeddings(
 
     while (retries < maxRetries && !success) {
       try {
-        const response = await openai.embeddings.create({
-          model: EMBEDDINGS_MODEL,
-          input: batch,
-        });
+        // Calculate timeout based on batch size (30s per 100 items, max 5 minutes)
+        const batchTimeout = Math.min(batch.length * 300, 300000);
+        
+        const response = await Promise.race([
+          openai.embeddings.create({
+            model: EMBEDDINGS_MODEL,
+            input: batch,
+          }),
+          new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error('Batch embedding generation timeout')), batchTimeout)
+          ),
+        ]);
 
         const batchEmbeddings = response.data.map((item) => item.embedding);
         embeddings.push(...batchEmbeddings);
@@ -44,6 +58,14 @@ export async function generateEmbeddings(
           const delay = Math.pow(2, retries) * 1000;
           await new Promise((resolve) => setTimeout(resolve, delay));
           retries++;
+        } else if (error.message?.includes('timeout')) {
+          // Timeout error - retry once
+          if (retries < maxRetries) {
+            retries++;
+            await new Promise((resolve) => setTimeout(resolve, 2000));
+          } else {
+            throw error;
+          }
         } else {
           throw error;
         }

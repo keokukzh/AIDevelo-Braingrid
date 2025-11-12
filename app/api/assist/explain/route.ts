@@ -4,12 +4,21 @@ import { searchChunksByQuestion } from '@/lib/rag/search';
 import { buildContextWithLimit } from '@/lib/rag/context';
 import { openai, CHAT_MODEL } from '@/lib/openai';
 
+// Increase route timeout for Next.js (default is 10s, we need more for OpenAI)
+export const maxDuration = 60; // 60 seconds
+
 export async function POST(request: NextRequest) {
   try {
     // No authentication required - public access
 
-    // Parse request body
-    const body = await request.json();
+    // Parse request body with timeout
+    const body = await Promise.race([
+      request.json(),
+      new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Request body parsing timeout')), 5000)
+      ),
+    ]) as { question?: string };
+
     const { question } = body;
 
     if (!question || typeof question !== 'string' || question.trim().length === 0) {
@@ -26,8 +35,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Search for similar chunks
-    const chunks = await searchChunksByQuestion(question.trim(), 5);
+    // Search for similar chunks with timeout
+    const chunks = await Promise.race([
+      searchChunksByQuestion(question.trim(), 5),
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('Vector search timeout')), 15000)
+      ),
+    ]);
 
     if (chunks.length === 0) {
       return NextResponse.json({
@@ -47,16 +61,21 @@ export async function POST(request: NextRequest) {
 - Be concise but thorough.
 - Use markdown formatting for better readability.`;
 
-    // Generate answer using OpenAI
-    const completion = await openai.chat.completions.create({
-      model: CHAT_MODEL,
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: `Context:\n${context}\n\nQuestion: ${question}` },
-      ],
-      temperature: 0.7,
-      max_tokens: 1000,
-    });
+    // Generate answer using OpenAI with timeout
+    const completion = await Promise.race([
+      openai.chat.completions.create({
+        model: CHAT_MODEL,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: `Context:\n${context}\n\nQuestion: ${question}` },
+        ],
+        temperature: 0.7,
+        max_tokens: 1000,
+      }),
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('OpenAI API timeout')), 45000)
+      ),
+    ]);
 
     const answer = completion.choices[0]?.message?.content || 'Unable to generate answer.';
 
@@ -73,9 +92,24 @@ export async function POST(request: NextRequest) {
     });
   } catch (error: any) {
     console.error('Error in explanation endpoint:', error);
+    
+    // Provide user-friendly error messages
+    let errorMessage = 'Internal server error';
+    let statusCode = 500;
+
+    if (error.message?.includes('timeout')) {
+      errorMessage = 'The request took too long to process. Please try again with a simpler question.';
+      statusCode = 504; // Gateway Timeout
+    } else if (error.message?.includes('OpenAI')) {
+      errorMessage = 'AI service is temporarily unavailable. Please try again later.';
+      statusCode = 503; // Service Unavailable
+    } else if (error.message) {
+      errorMessage = error.message;
+    }
+
     return NextResponse.json(
-      { success: false, error: error.message || 'Internal server error' },
-      { status: 500 }
+      { success: false, error: errorMessage },
+      { status: statusCode }
     );
   }
 }

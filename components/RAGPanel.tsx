@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { fetchWithTimeout } from '@/lib/utils/fetchWithTimeout';
 
 interface Source {
   title: string;
@@ -28,21 +29,34 @@ export default function RAGPanel() {
     setResponse(null);
 
     try {
-      const res = await fetch('/api/assist/explain', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question }),
-      });
+      // Use fetchWithTimeout with 60 second timeout for RAG operations
+      const res = await fetchWithTimeout(
+        '/api/assist/explain',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ question }),
+        },
+        60000 // 60 seconds timeout
+      );
 
       if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || 'Failed to get answer');
+        const data = await res.json().catch(() => ({ error: 'Failed to parse error response' }));
+        throw new Error(data.error || `Server error: ${res.status} ${res.statusText}`);
       }
 
       const data: RAGResponse = await res.json();
       setResponse(data);
     } catch (err: any) {
-      setError(err.message || 'An error occurred');
+      // Handle timeout specifically
+      if (err.message?.includes('timed out')) {
+        setError('The request took too long. The server might be processing a complex query. Please try again with a simpler question.');
+      } else if (err.name === 'AbortError' || err.message?.includes('aborted')) {
+        setError('Request was cancelled. Please try again.');
+      } else {
+        setError(err.message || 'An error occurred while processing your question. Please try again.');
+      }
+      console.error('RAG Panel error:', err);
     } finally {
       setLoading(false);
     }
