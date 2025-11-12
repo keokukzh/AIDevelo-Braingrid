@@ -12,7 +12,12 @@ export class WebSocketClient {
   private isConnecting = false;
 
   constructor(url?: string) {
-    this.url = url || process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:3001';
+    // Support both NEXT_PUBLIC_WS_URL and WS_SERVER_URL for compatibility
+    this.url = url || 
+      (typeof window !== 'undefined' ? (window as any).__WS_URL__ : undefined) ||
+      process.env.NEXT_PUBLIC_WS_URL || 
+      process.env.WS_SERVER_URL ||
+      'ws://localhost:3001';
   }
 
   connect(): Promise<void> {
